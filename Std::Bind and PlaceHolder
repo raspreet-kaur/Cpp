@@ -1,0 +1,73 @@
+The new standard library also adds a new function: std::bind. std::bind is a template function that returns a std::function object that binds a set of arguments to a function.
+
+Consider the first code listing shown in this post, the functions stored in the vector do not receive any argument; but you probably want to store a function that receives more arguments in the same vector. You could do that using std::bind.
+
+Say you have this function:
+
+
+void show_text(const string& t)
+{
+    cout << "TEXT: " << t << endl;
+}
+How can you add it into the function of vectors of the first code listing? Add this code the main function:
+
+function <void ()> f = bind(show_text, "Bound function");
+x.push_back(f); 
+As you can see, the std::bind receives a pointer to a function (it also can be a lambda expression or a functor) and receives a list of parameters that pass it to the function. As result, bind returns a new function object with a different prototype because all the parameters of the function were already specified.
+
+Look at this code:
+
+#include <functional>
+#include <iostream>
+ 
+using namespace std;
+using namespace std::placeholders;
+ 
+int multiply(int a, int b)
+{
+    return a * b;
+}
+ 
+int main()
+{
+    auto f = bind(multiply, 5, _1);
+    for (int i = 0; i < 10; i++)
+    {
+        cout << "5 * " << i << " = " << f(i) << endl;
+    }
+        return 0;
+}
+Look at the usage of std::bind: The first parameter is the pointer to the function multiply. The second parameter is the value passed as first parameter to the function multiply. The third parameter is called a “placeholder”. A placeholder is an object that specifies the number of parameter in the bound function that will be used to enter this parameter. So, if you look inside the for loop, you can call f just passing it one parameter.
+
+Thanks to the placeholders, you can change the order of the arguments passed as parameters to a bound function. For example:
+
+#include <functional>
+#include <string>
+#include <iostream>
+ 
+using namespace std;
+using namespace std::placeholders;
+ 
+void show(const string& a, const string& b, const string& c)
+{
+    cout << a << "; " << b << "; " << c << endl;
+}
+ 
+int main()
+{
+    auto x = bind(show, _1, _2, _3);
+    auto y = bind(show, _3, _1, _2);
+    auto z = bind(show, "hello", _2, _1);
+     
+    x("one", "two", "three");
+    y("one", "two", "three");
+    z("one", "two");
+     
+    return 0;
+}
+The output is:
+
+
+one; two; three
+three; one; two
+hello; two; one
